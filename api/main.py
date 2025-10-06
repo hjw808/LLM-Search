@@ -194,6 +194,114 @@ async def list_reports():
     return reports
 
 
+@app.get("/api/reports/{report_id}/html")
+async def get_report_html(report_id: str):
+    """Get HTML report for a specific report ID"""
+    from fastapi.responses import FileResponse
+
+    # Find the HTML report file
+    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
+
+    # Search for HTML file with this report ID
+    import glob
+    html_pattern = os.path.join(results_dir, '**', f'*_report_testrun_{report_id}*.html')
+    html_files = glob.glob(html_pattern, recursive=True)
+
+    if not html_files:
+        # Try simpler pattern
+        html_pattern = os.path.join(results_dir, '**', f'*{report_id}*.html')
+        html_files = glob.glob(html_pattern, recursive=True)
+
+    if html_files:
+        return FileResponse(html_files[0], media_type='text/html')
+
+    raise HTTPException(status_code=404, detail="HTML report not found")
+
+
+@app.get("/api/reports/{report_id}/responses")
+async def get_report_responses(report_id: str, provider: Optional[str] = None):
+    """Get AI responses for a specific report"""
+    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
+
+    # Find analysis CSV (has competitor data)
+    import glob
+    analysis_pattern = os.path.join(results_dir, '**', f'*_analysis_testrun_{report_id}*.csv')
+    analysis_files = glob.glob(analysis_pattern, recursive=True)
+
+    if not analysis_files:
+        # Fall back to responses CSV
+        responses_pattern = os.path.join(results_dir, '**', f'*_responses_testrun_{report_id}*.csv')
+        analysis_files = glob.glob(responses_pattern, recursive=True)
+
+    if not analysis_files:
+        raise HTTPException(status_code=404, detail="Response data not found")
+
+    # Read CSV and return as JSON
+    import pandas as pd
+    try:
+        df = pd.read_csv(analysis_files[0])
+
+        # Filter by provider if specified
+        if provider and 'Provider' in df.columns:
+            df = df[df['Provider'].str.lower() == provider.lower()]
+
+        # Convert to list of dicts
+        responses = df.to_dict('records')
+        return responses
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading responses: {str(e)}")
+
+
+@app.delete("/api/reports/{report_id}")
+async def delete_report(report_id: str):
+    """Delete all files associated with a report"""
+    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
+
+    deleted_files = []
+    import glob
+
+    # Find all files with this test run ID
+    patterns = [
+        f'*testrun_{report_id}*',
+        f'.test_run_{report_id}.json'
+    ]
+
+    for pattern in patterns:
+        files = glob.glob(os.path.join(results_dir, '**', pattern), recursive=True)
+        for file in files:
+            try:
+                os.remove(file)
+                deleted_files.append(file)
+            except Exception as e:
+                print(f"Error deleting {file}: {e}")
+
+    return {"success": True, "deleted_files": len(deleted_files)}
+
+
+@app.get("/api/reports/{report_id}/download-responses")
+async def download_report_responses(report_id: str, format: str = "csv"):
+    """Download responses as CSV or JSON"""
+    from fastapi.responses import FileResponse
+
+    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
+
+    # Find analysis CSV
+    import glob
+    analysis_pattern = os.path.join(results_dir, '**', f'*_analysis_testrun_{report_id}*.csv')
+    csv_files = glob.glob(analysis_pattern, recursive=True)
+
+    if not csv_files:
+        raise HTTPException(status_code=404, detail="Response data not found")
+
+    if format == "csv":
+        return FileResponse(csv_files[0], media_type='text/csv',
+                          filename=f'responses_{report_id}.csv')
+    else:  # json
+        import pandas as pd
+        df = pd.read_csv(csv_files[0])
+        return df.to_dict('records')
+
+
 @app.get("/api/config")
 async def get_config():
     """Get business configuration from config.yaml"""
