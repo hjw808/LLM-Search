@@ -246,6 +246,9 @@ async def get_report_responses(report_id: str, provider: Optional[str] = None):
         if provider and 'Provider' in df.columns:
             df = df[df['Provider'].str.lower() == provider.lower()]
 
+        # Replace NaN with None for JSON serialization
+        df = df.where(pd.notna(df), None)
+
         # Convert to list of dicts
         responses = df.to_dict('records')
         return responses
@@ -295,6 +298,8 @@ async def download_report_responses(report_id: str, format: str = "csv"):
                           filename=f'responses_{report_id}.csv')
     else:  # json
         df = pd.read_csv(csv_files[0])
+        # Replace NaN with None for JSON serialization
+        df = df.where(pd.notna(df), None)
         return df.to_dict('records')
 
 
