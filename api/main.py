@@ -206,21 +206,25 @@ async def list_reports():
                                 # Count unique competitors mentioned and build rankings
                                 top_competitors = []
                                 if 'Competitors_Mentioned' in df.columns:
-                                    # Competitors_Mentioned contains comma-separated competitor names
+                                    # Competitors_Mentioned contains semicolon-separated competitor names
                                     competitor_counts = {}
                                     competitor_queries = {}  # Track which queries mention each competitor
 
                                     for idx, row in df.iterrows():
                                         comp_list = row.get('Competitors_Mentioned', '')
-                                        if comp_list and str(comp_list).strip():
-                                            query_id = row.get('Query ID', idx)
-                                            competitors = [c.strip() for c in str(comp_list).split(',')]
-                                            for comp in competitors:
-                                                if comp:
-                                                    competitor_counts[comp] = competitor_counts.get(comp, 0) + 1
-                                                    if comp not in competitor_queries:
-                                                        competitor_queries[comp] = []
-                                                    competitor_queries[comp].append(int(query_id))
+                                        # Skip NaN, None, or 'nan' string values
+                                        if pd.isna(comp_list) or not str(comp_list).strip() or str(comp_list).lower() == 'nan':
+                                            continue
+
+                                        query_id = row.get('Query ID', idx)
+                                        # Split by semicolon (not comma)
+                                        competitors = [c.strip() for c in str(comp_list).split(';')]
+                                        for comp in competitors:
+                                            if comp and comp.lower() != 'nan':
+                                                competitor_counts[comp] = competitor_counts.get(comp, 0) + 1
+                                                if comp not in competitor_queries:
+                                                    competitor_queries[comp] = []
+                                                competitor_queries[comp].append(int(query_id))
 
                                     competitors_found = len(competitor_counts)
 
