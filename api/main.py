@@ -169,6 +169,64 @@ async def list_reports():
     return reports
 
 
+@app.get("/api/config")
+async def get_config():
+    """Get business configuration from config.yaml"""
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
+
+    try:
+        import yaml
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+
+        return {
+            "name": config.get("business_name", ""),
+            "url": config.get("business_url", ""),
+            "location": config.get("business_location", "Global"),
+            "aliases": config.get("business_aliases", []),
+            "queries": {
+                "consumer": config.get("num_consumer_queries", 10),
+                "business": config.get("num_business_queries", 10)
+            }
+        }
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Configuration file not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading config: {str(e)}")
+
+
+class ConfigUpdate(BaseModel):
+    name: str
+    url: str
+    location: str
+    aliases: List[str]
+    queries: Dict[str, int]
+
+
+@app.post("/api/config")
+async def update_config(config: ConfigUpdate):
+    """Update business configuration in config.yaml"""
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
+
+    try:
+        import yaml
+        yaml_config = {
+            "business_name": config.name,
+            "business_url": config.url,
+            "business_location": config.location,
+            "business_aliases": config.aliases,
+            "num_consumer_queries": config.queries.get("consumer", 10),
+            "num_business_queries": config.queries.get("business", 10)
+        }
+
+        with open(config_path, 'w') as f:
+            yaml.dump(yaml_config, f, default_flow_style=False, indent=2)
+
+        return {"success": True, "message": "Configuration updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving config: {str(e)}")
+
+
 async def run_test_background(
     job_id: str,
     providers: List[str],
