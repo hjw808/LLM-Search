@@ -28,9 +28,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://*.vercel.app",
-        "https://your-domain.com"  # Update with your production domain
+        "https://llm-search-frontend-two.vercel.app",
+        "https://llm-search-frontend.vercel.app",
     ],
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow all Vercel preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
