@@ -241,6 +241,8 @@ async def run_test_background(
     This is a simplified version - you'll want to call your existing scripts
     """
     try:
+        import asyncio
+
         # Update status to running
         jobs_storage[job_id]["status"] = "running"
         jobs_storage[job_id]["progress"] = 10
@@ -250,21 +252,25 @@ async def run_test_background(
         config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
 
         # Here you would call your existing Python scripts
-        # For now, this is a placeholder structure
+        # For now, this is a placeholder structure with delays to simulate work
 
         # Step 1: Generate queries (20% progress)
+        await asyncio.sleep(2)
         jobs_storage[job_id]["progress"] = 20
         jobs_storage[job_id]["message"] = "Queries generated, collecting responses..."
 
         # Step 2: Collect responses (20-70% progress)
+        await asyncio.sleep(3)
         jobs_storage[job_id]["progress"] = 50
         jobs_storage[job_id]["message"] = "Collecting AI responses..."
 
         # Step 3: Analyze responses (70-90% progress)
+        await asyncio.sleep(3)
         jobs_storage[job_id]["progress"] = 80
         jobs_storage[job_id]["message"] = "Analyzing responses for competitors..."
 
         # Step 4: Generate report (90-100% progress)
+        await asyncio.sleep(2)
         jobs_storage[job_id]["progress"] = 95
         jobs_storage[job_id]["message"] = "Generating report..."
 
