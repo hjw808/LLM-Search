@@ -1,0 +1,211 @@
+# AI Visibility Query Generation Prompt
+
+Generate {total_queries} realistic search queries to test AI visibility for {business_name} ({business_url}) operating in {business_location}.
+
+## PHASE 1: BUSINESS INTELLIGENCE GATHERING
+
+**MANDATORY FIRST STEP:** Analyze the business website to extract:
+
+1. **Specific Products/Services:**
+   - Exact product names, models, service types (not generic categories)
+   - Technical specifications, brands carried, specializations
+   - Price tiers (budget, mid-range, premium indicators)
+
+2. **Geographic Context:**
+   - Primary operating location: {business_location}
+   - Specific suburbs, cities, regions served within this area
+   - Service radius or delivery areas
+   - Local/regional/national coverage within {business_location}
+
+3. **Industry Terminology:**
+   - Technical terms they use
+   - Industry-specific jargon
+   - Product categories in their language
+
+4. **Customer Pain Points:**
+   - Problems they explicitly solve
+   - Common issues mentioned
+   - Before/after scenarios described
+
+5. **Unique Value Propositions:**
+   - What differentiates them
+   - Special capabilities
+   - Certifications, warranties, guarantees
+
+6. **Target Customer Indicators:**
+   - B2C: Demographics, vehicle types, usage scenarios
+   - B2B: Industries served, company sizes, fleet types
+
+---
+
+## PHASE 2: PERSONA DEVELOPMENT
+
+Create specific persona profiles BEFORE writing queries:
+
+### Consumer Personas (use 3-4 different profiles):
+- **Profile 1:** [Specific user type, vehicle/equipment, usage pattern, location]
+- **Profile 2:** [Different user type, different context, different needs]
+- **Profile 3:** [Another distinct profile...]
+
+### Business Personas (use 3-4 different profiles):
+- **Profile 1:** [Industry, company size, fleet type, business challenge]
+- **Profile 2:** [Different industry, scale, operational needs]
+- **Profile 3:** [Another distinct business profile...]
+
+---
+
+## PHASE 3: QUERY GENERATION
+
+### CONSUMER QUERIES ({num_consumer})
+
+**CRITICAL RULES:**
+- [FORBIDDEN] NEVER mention {business_name} or any specific business names
+- [FORBIDDEN] NO generic queries without specific context
+- [REQUIRED] Every query must pass the "5-detail test" (see Phase 4)
+
+**Query Mix Requirements:**
+- 30% Problem diagnosis queries ("My [specific item] has [specific symptom]...")
+- 30% Solution research queries ("What are the best options for...")
+- 20% Location-specific queries ("In [specific suburb/area], where can I...")
+- 20% Comparison/validation queries ("Is [X] better than [Y] for...")
+
+**Context Layering (each query needs 4-5 layers):**
+1. **WHO:** Specific user type and situation
+2. **WHAT:** Exact product/model/issue with details
+3. **WHERE:** Precise location within {business_location} or usage environment
+4. **WHY:** Specific reason/constraint/motivation
+5. **SCALE/TIME:** Measurements, timeframes, quantities
+
+**Good Examples:**
+```
+✅ "My 2019 Toyota Hilux SR5 suspension keeps bottoming out on the rear when towing my 2.5 tonne boat from Brisbane to Fraser Island - what heavy duty upgrade options are available that won't affect daily driving comfort?"
+
+✅ "Just bought a 2021 Ford Ranger for weekend 4x4 trips to Glasshouse Mountains - need suspension advice for rocky terrain and river crossings, budget around $3-4k, what should I be looking at?"
+
+✅ "Moved to Toowoomba and driving gravel roads daily in my Isuzu D-Max - noticed significant body roll and harsh ride after 40,000km, what causes this and what are my repair vs upgrade options?"
+```
+
+**Bad Examples (NEVER generate like these):**
+```
+❌ "Best suspension services in Brisbane" - too generic, no context
+❌ "Looking for 4x4 upgrades" - no vehicle, location, or specific need
+❌ "Suspension repair near me" - sounds like a search engine query, no detail
+❌ "Where can I get my truck fixed" - missing all specifics
+```
+
+**Style Variation:**
+- 40% Natural conversational questions starting with context
+- 30% Problem-first statements seeking solutions
+- 30% Research-oriented queries
+
+---
+
+### BUSINESS QUERIES ({num_business})
+
+**CRITICAL RULES:**
+- [FORBIDDEN] NEVER mention {business_name} - we test organic appearance
+- [REQUIRED] Include business scale indicators
+- [REQUIRED] Include B2B concerns (ROI, warranty, compliance, service agreements)
+- [REQUIRED] Larger scale than consumer queries
+
+**Query Mix Requirements:**
+- 40% Procurement/sourcing queries ("Need supplier for...")
+- 30% ROI/performance optimization ("Best solution to maximize...")
+- 30% Compliance/specifications ("Require [service] meeting [standard]...")
+
+**B2B Context Requirements (include 3-4 per query):**
+1. **Scale Indicators:**
+   - Fleet size: "15 vehicles", "200+ units", "growing from 8 to 20"
+   - Volume: "bulk pricing needed", "ongoing quarterly supply", "annual contract"
+   - Operations: "24/7 operation", "multi-site", "nationwide coverage"
+
+2. **Business Concerns:**
+   - Financial: "ROI within 18 months", "payment terms", "volume discounts"
+   - Service: "preventive maintenance plan", "24/7 support", "service level agreement"
+   - Compliance: "ADR certified", "meets AS/NZS standards", "approved for mining sites"
+   - Warranty: "minimum 3-year warranty", "extended coverage", "replacement guarantees"
+
+3. **Industry Context:**
+   - Specific industry: "construction", "mining", "logistics", "agriculture"
+   - Use case: "heavy hauling", "off-road operations", "urban delivery"
+   - Environment: "remote locations", "harsh conditions", "high-temperature regions"
+
+**Good Examples:**
+```
+✅ "Our construction company operates 12 Isuzu NPS trucks doing daily Brisbane to Gold Coast runs carrying 3-tonne loads - need suspension upgrade supplier who can provide fleet pricing, 5-year warranty, and scheduled maintenance program that minimizes downtime"
+
+✅ "Looking for suspension specialists in Queensland who can handle our mining fleet of 25 Toyota Landcruiser 79 series used in Bowen Basin - require ADR compliance, rapid turnaround service, and proven track record with similar operations"
+
+✅ "We're a delivery service expanding from 8 to 20 vans in the next 6 months across Brisbane - need suspension solutions that extend vehicle life by 30%+ and come with preventive maintenance contracts to reduce our total cost of ownership"
+```
+
+**Bad Examples (NEVER generate like these):**
+```
+❌ "Business suspension services Brisbane" - no scale, no context
+❌ "Fleet maintenance provider needed" - too vague, missing specifics
+❌ "Looking for commercial vehicle services" - no industry, no requirements
+❌ "Bulk pricing for suspension work" - missing all business context
+```
+
+---
+
+## PHASE 4: QUALITY CONTROL & VALIDATION
+
+### The 5-Detail Test (EVERY query must include):
+1. ✓ **Specific location** (suburb/city/region within {business_location}, not just country)
+2. ✓ **Specific product/model/type** (exact make, model, year OR specific service type)
+3. ✓ **Specific measurements/numbers** (weight, distance, quantity, timeframe, budget)
+4. ✓ **Specific context** (usage scenario, problem symptoms, business scale, environment)
+5. ✓ **Natural language** (sounds like real person, not keyword stuffing)
+
+### Diversity Check (across all queries):
+- [ ] No two queries use the same opening pattern
+- [ ] Mix of question formats (Why, What, Where, How, Is, Should, etc.)
+- [ ] Variety of locations mentioned
+- [ ] Different products/services referenced
+- [ ] Range of price points/scales indicated
+- [ ] Multiple problem types and solutions explored
+
+### Realism Test (each query must pass):
+1. **Could this exact situation exist in real life?** (not hypothetical/made-up)
+2. **Can an expert respond without asking follow-up questions?** (self-contained)
+3. **Would 10 people write this 10 different ways?** (not template-obvious)
+4. **Does it avoid mentioning the target business?** (tests organic discovery)
+5. **Does it sound like a human wrote it?** (not AI-generated patterns)
+
+**If ANY test fails, regenerate that query.**
+
+### Anti-Pattern Check (reject queries that):
+- Sound like SEO keyword lists strung together
+- Use repetitive phrase structures across multiple queries
+- Include obvious marketing language or business names
+- Lack specific, verifiable details
+- Could apply to any business in any location
+
+---
+
+## OUTPUT FORMAT
+
+## Consumer Queries ({num_consumer})
+1. [Detailed, specific, self-contained query with 5+ context details]
+2. [Different opening pattern, different scenario, different location]
+3. [Unique situation, natural language, complete context]
+...
+
+## Business Queries ({num_business})
+1. [B2B query with scale, industry, compliance, and ROI concerns]
+2. [Different industry, different scale, different business driver]
+3. [Unique procurement scenario with specific requirements]
+...
+
+---
+
+## FINAL QUALITY MANDATE
+
+Every query should be so specific and realistic that it could be:
+- Copy-pasted from a real customer conversation
+- Answered by a domain expert without clarification
+- Distinguished from every other query by its unique details
+- Used to genuinely test whether AI would naturally suggest the business
+
+**Remember:** Generic queries won't test AI visibility. Only highly specific, contextual, realistic queries reveal whether AI engines naturally recommend a business when it's the right solution.

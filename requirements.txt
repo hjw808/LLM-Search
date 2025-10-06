@@ -1,0 +1,28 @@
+# Core dependencies
+pyyaml>=6.0
+pandas>=2.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+beautifulsoup4>=4.12.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+jinja2>=3.1.2
+openai>=1.0.0
+anthropic>=0.7.0
+httpx>=0.26.0
+google-generativeai>=0.3.0
+
+# FastAPI Backend
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Database (PostgreSQL)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+alembic>=1.13.0
+
+# Background Tasks (Optional - for production scaling)
+# celery>=5.3.0
+# redis>=5.0.0
