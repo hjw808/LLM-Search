@@ -219,10 +219,10 @@ async def list_reports():
 
                                 provider_reports = [{
                                     "provider": provider_match,
-                                    "queries": total_queries,
+                                    "queries": int(total_queries),
                                     "business_mentions": int(business_mentions),
-                                    "competitors_found": competitors_found,
-                                    "visibility_score": visibility_score
+                                    "competitors_found": int(competitors_found),
+                                    "visibility_score": int(visibility_score)
                                 }]
                         except Exception as e:
                             print(f"Error reading analysis CSV for {report_id}: {e}")
@@ -232,12 +232,12 @@ async def list_reports():
                         "timestamp": metadata['timestamp'],
                         "business_name": business_name,
                         "providers": metadata.get('providers', []),
-                        "total_queries": metadata.get('consumer_queries', 0) + metadata.get('business_queries', 0),
-                        "visibility_score": visibility_score,
+                        "total_queries": int(metadata.get('consumer_queries', 0) + metadata.get('business_queries', 0)),
+                        "visibility_score": int(visibility_score),
                         "status": metadata.get('status', 'completed'),
                         "has_analysis": True,
-                        "business_mentions": business_mentions,
-                        "competitors_found": competitors_found,
+                        "business_mentions": int(business_mentions),
+                        "competitors_found": int(competitors_found),
                         "provider_reports": provider_reports
                     }
                     reports.append(report)
