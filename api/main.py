@@ -293,6 +293,25 @@ async def run_test_background(
         jobs_storage[job_id]["test_run_id"] = job_id
         jobs_storage[job_id]["report_url"] = f"/api/reports/{job_id}"
 
+        # Create a mock metadata file for testing
+        results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
+        os.makedirs(results_dir, exist_ok=True)
+
+        metadata_file = os.path.join(results_dir, f'.test_run_{job_id}.json')
+        metadata = {
+            "test_run_id": job_id,
+            "providers": providers,
+            "timestamp": datetime.now().isoformat(),
+            "total_providers": len(providers),
+            "query_types": query_types,
+            "consumer_queries": consumer_queries,
+            "business_queries": business_queries,
+            "status": "completed"
+        }
+
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
     except Exception as e:
         jobs_storage[job_id]["status"] = "failed"
         jobs_storage[job_id]["progress"] = 0
