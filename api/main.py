@@ -262,41 +262,104 @@ async def run_test_background(
 ):
     """
     Background task that runs the actual test
-    This is a simplified version - you'll want to call your existing scripts
+    Executes Python scripts to generate queries, collect responses, and create reports
     """
     try:
         import asyncio
+        import subprocess
 
         # Update status to running
         jobs_storage[job_id]["status"] = "running"
         jobs_storage[job_id]["progress"] = 10
-        jobs_storage[job_id]["message"] = "Generating queries..."
+        jobs_storage[job_id]["message"] = "Starting test run..."
 
-        # Load config
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
+        # Paths
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        scripts_dir = os.path.join(base_dir, 'scripts')
+        config_path = os.path.join(base_dir, 'config.yaml')
 
-        # Here you would call your existing Python scripts
-        # For now, this is a placeholder structure with delays to simulate work
+        provider_results = []
+        queries_paths = {}
 
-        # Step 1: Generate queries (20% progress)
-        await asyncio.sleep(2)
-        jobs_storage[job_id]["progress"] = 20
-        jobs_storage[job_id]["message"] = "Queries generated, collecting responses..."
+        # Step 1: Generate queries for each provider
+        jobs_storage[job_id]["progress"] = 15
+        jobs_storage[job_id]["message"] = f"Generating queries for {len(providers)} provider(s)..."
 
-        # Step 2: Collect responses (20-70% progress)
-        await asyncio.sleep(3)
-        jobs_storage[job_id]["progress"] = 50
-        jobs_storage[job_id]["message"] = "Collecting AI responses..."
+        for provider in providers:
+            try:
+                script_path = os.path.join(scripts_dir, f'{provider}_script.py')
 
-        # Step 3: Analyze responses (70-90% progress)
-        await asyncio.sleep(3)
+                # Run generate action
+                result = subprocess.run(
+                    ['python', script_path, '--config', config_path, '--action', 'generate'],
+                    cwd=base_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+
+                if result.returncode == 0:
+                    # Extract queries path from output
+                    for line in result.stdout.split('\n'):
+                        if 'Saved to:' in line or 'saved to:' in line:
+                            queries_path = line.split('to:')[-1].strip().rstrip('.')
+                            queries_paths[provider] = queries_path
+                            break
+                else:
+                    print(f"Error generating queries for {provider}: {result.stderr}")
+
+            except Exception as e:
+                print(f"Exception generating queries for {provider}: {e}")
+
+        jobs_storage[job_id]["progress"] = 30
+        jobs_storage[job_id]["message"] = f"Generated queries for {len(queries_paths)} provider(s). Collecting responses..."
+
+        # Step 2: Collect responses for each provider
+        for provider, queries_path in queries_paths.items():
+            try:
+                script_path = os.path.join(scripts_dir, f'{provider}_script.py')
+
+                # Run collect action
+                result = subprocess.run(
+                    ['python', script_path, '--config', config_path, '--action', 'collect',
+                     '--queries', queries_path, '--test-run-id', job_id],
+                    cwd=base_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=300  # 5 minutes max for collection
+                )
+
+                if result.returncode == 0:
+                    provider_results.append({
+                        "provider": provider,
+                        "success": True,
+                        "totalQueries": consumer_queries + business_queries,
+                    })
+                else:
+                    provider_results.append({
+                        "provider": provider,
+                        "success": False,
+                        "error": result.stderr[:200],
+                        "totalQueries": consumer_queries + business_queries,
+                    })
+
+            except Exception as e:
+                provider_results.append({
+                    "provider": provider,
+                    "success": False,
+                    "error": str(e)[:200],
+                    "totalQueries": consumer_queries + business_queries,
+                })
+
         jobs_storage[job_id]["progress"] = 80
-        jobs_storage[job_id]["message"] = "Analyzing responses for competitors..."
+        jobs_storage[job_id]["message"] = "Responses collected. Generating reports..."
 
-        # Step 4: Generate report (90-100% progress)
-        await asyncio.sleep(2)
+        # Step 3: Generate reports for each provider
+        # The report generation will be triggered by the scripts automatically
+        await asyncio.sleep(2)  # Give time for any async file operations
+
         jobs_storage[job_id]["progress"] = 95
-        jobs_storage[job_id]["message"] = "Generating report..."
+        jobs_storage[job_id]["message"] = "Finalizing reports..."
 
         # Complete
         jobs_storage[job_id]["status"] = "completed"
