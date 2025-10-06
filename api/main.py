@@ -196,10 +196,10 @@ async def list_reports():
                             if total_queries > 0:
                                 # Count business mentions using Business_Mentioned column (True/False)
                                 if 'Business_Mentioned' in df.columns:
-                                    business_mentions = df['Business_Mentioned'].sum()
+                                    business_mentions = int(df['Business_Mentioned'].sum())
                                 else:
                                     # Fallback: check Response Text column
-                                    business_mentions = df['Response Text'].str.contains(business_name, case=False, na=False).sum()
+                                    business_mentions = int(df['Response Text'].str.contains(business_name, case=False, na=False).sum())
 
                                 visibility_score = int((business_mentions / total_queries) * 100)
 
