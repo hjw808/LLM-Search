@@ -203,15 +203,36 @@ async def list_reports():
 
                                 visibility_score = int((business_mentions / total_queries) * 100)
 
-                                # Count unique competitors mentioned
+                                # Count unique competitors mentioned and build rankings
+                                top_competitors = []
                                 if 'Competitors_Mentioned' in df.columns:
                                     # Competitors_Mentioned contains comma-separated competitor names
-                                    all_competitors = set()
-                                    for comp_list in df['Competitors_Mentioned'].dropna():
+                                    competitor_counts = {}
+                                    competitor_queries = {}  # Track which queries mention each competitor
+
+                                    for idx, row in df.iterrows():
+                                        comp_list = row.get('Competitors_Mentioned', '')
                                         if comp_list and str(comp_list).strip():
+                                            query_id = row.get('Query ID', idx)
                                             competitors = [c.strip() for c in str(comp_list).split(',')]
-                                            all_competitors.update(competitors)
-                                    competitors_found = len(all_competitors)
+                                            for comp in competitors:
+                                                if comp:
+                                                    competitor_counts[comp] = competitor_counts.get(comp, 0) + 1
+                                                    if comp not in competitor_queries:
+                                                        competitor_queries[comp] = []
+                                                    competitor_queries[comp].append(int(query_id))
+
+                                    competitors_found = len(competitor_counts)
+
+                                    # Build top competitors list with query references
+                                    top_competitors = [
+                                        {
+                                            "name": name,
+                                            "count": int(count),
+                                            "queries": competitor_queries[name]
+                                        }
+                                        for name, count in sorted(competitor_counts.items(), key=lambda x: x[1], reverse=True)
+                                    ]
 
                                 # Extract provider from filename
                                 filename = os.path.basename(analysis_files[0])
@@ -222,7 +243,8 @@ async def list_reports():
                                     "queries": int(total_queries),
                                     "business_mentions": int(business_mentions),
                                     "competitors_found": int(competitors_found),
-                                    "visibility_score": int(visibility_score)
+                                    "visibility_score": int(visibility_score),
+                                    "top_competitors": top_competitors
                                 }]
                         except Exception as e:
                             print(f"Error reading analysis CSV for {report_id}: {e}")
@@ -238,6 +260,7 @@ async def list_reports():
                         "has_analysis": True,
                         "business_mentions": int(business_mentions),
                         "competitors_found": int(competitors_found),
+                        "top_competitors": top_competitors,
                         "provider_reports": provider_reports
                     }
                     reports.append(report)
