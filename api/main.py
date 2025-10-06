@@ -61,7 +61,7 @@ class JobStatus(BaseModel):
     status: str  # 'pending', 'running', 'completed', 'failed'
     progress: int  # 0-100
     message: str
-    results: Optional[Dict[str, Any]] = None
+    results: Optional[List[Dict[str, Any]]] = None  # Changed from Dict to List
     error: Optional[str] = None
 
 
