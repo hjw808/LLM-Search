@@ -150,6 +150,17 @@ async def list_reports():
     if not os.path.exists(results_dir):
         return []
 
+    # Load config to get business name
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
+    business_name = "Unknown Business"
+    try:
+        import yaml
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+            business_name = config.get('business_name', 'Unknown Business')
+    except:
+        pass
+
     reports = []
 
     # Scan for test run metadata files
@@ -159,7 +170,20 @@ async def list_reports():
             try:
                 with open(metadata_path, 'r') as f:
                     metadata = json.load(f)
-                    reports.append(metadata)
+
+                    # Transform to frontend format
+                    report = {
+                        "id": f"{business_name.replace(' ', '_')}_{metadata['timestamp']}",
+                        "timestamp": metadata['timestamp'],
+                        "business_name": business_name,
+                        "providers": metadata.get('providers', []),
+                        "total_queries": metadata.get('consumer_queries', 0) + metadata.get('business_queries', 0),
+                        "visibility_score": 0,  # Mock value for now
+                        "status": metadata.get('status', 'completed'),
+                        "has_analysis": False,  # Mock value for now
+                        "provider_reports": []  # Mock value for now
+                    }
+                    reports.append(report)
             except Exception as e:
                 print(f"Error reading metadata {item}: {e}")
                 continue
