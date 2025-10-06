@@ -381,9 +381,39 @@ async def run_test_background(
         jobs_storage[job_id]["progress"] = 80
         jobs_storage[job_id]["message"] = "Responses collected. Generating reports..."
 
-        # Step 3: Generate reports for each provider
-        # The report generation will be triggered by the scripts automatically
-        await asyncio.sleep(2)  # Give time for any async file operations
+        # Step 3: Generate HTML reports for each provider
+        results_dir = os.path.join(base_dir, 'results', business_name.replace(' ', '_'))
+        report_script = os.path.join(scripts_dir, '4_generate_report.py')
+
+        if os.path.exists(results_dir) and os.path.exists(report_script):
+            # Find analysis CSV files
+            import glob
+            analysis_files = glob.glob(os.path.join(results_dir, f'*_analysis_*testrun_{job_id}*.csv'))
+
+            print(f"Found {len(analysis_files)} analysis files for report generation")
+
+            for analysis_file in analysis_files:
+                try:
+                    print(f"Generating report for: {analysis_file}")
+
+                    result = subprocess.run(
+                        ['python', report_script, '--analysis', analysis_file,
+                         '--config', config_path, '--test-run-id', job_id],
+                        cwd=base_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=60
+                    )
+
+                    print(f"Report generation return code: {result.returncode}")
+                    print(f"Report stdout: {result.stdout[:500]}")
+                    if result.returncode != 0:
+                        print(f"Report stderr: {result.stderr[:500]}")
+
+                except Exception as e:
+                    print(f"Exception generating report: {e}")
+                    import traceback
+                    traceback.print_exc()
 
         jobs_storage[job_id]["progress"] = 95
         jobs_storage[job_id]["message"] = "Finalizing reports..."
