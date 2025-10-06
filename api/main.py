@@ -332,6 +332,10 @@ async def run_test_background(
         for provider, queries_path in queries_paths.items():
             try:
                 script_path = os.path.join(scripts_dir, f'{provider}_script.py')
+                print(f"Collecting responses for {provider} from {queries_path}")
+
+                jobs_storage[job_id]["progress"] = 40 + (list(queries_paths.keys()).index(provider) * 30)
+                jobs_storage[job_id]["message"] = f"Collecting {provider} responses..."
 
                 # Run collect action
                 result = subprocess.run(
@@ -343,12 +347,17 @@ async def run_test_background(
                     timeout=300  # 5 minutes max for collection
                 )
 
+                print(f"Collect return code for {provider}: {result.returncode}")
+                print(f"Collect stdout: {result.stdout[:500]}")
+                print(f"Collect stderr: {result.stderr[:500]}")
+
                 if result.returncode == 0:
                     provider_results.append({
                         "provider": provider,
                         "success": True,
                         "totalQueries": consumer_queries + business_queries,
                     })
+                    print(f"Successfully collected responses for {provider}")
                 else:
                     provider_results.append({
                         "provider": provider,
@@ -356,8 +365,12 @@ async def run_test_background(
                         "error": result.stderr[:200],
                         "totalQueries": consumer_queries + business_queries,
                     })
+                    print(f"Failed to collect responses for {provider}: {result.stderr[:200]}")
 
             except Exception as e:
+                print(f"Exception collecting responses for {provider}: {e}")
+                import traceback
+                traceback.print_exc()
                 provider_results.append({
                     "provider": provider,
                     "success": False,
