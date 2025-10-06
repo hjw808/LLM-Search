@@ -386,29 +386,31 @@ async def run_test_background(
         report_script = os.path.join(scripts_dir, '4_generate_report.py')
 
         if os.path.exists(results_dir) and os.path.exists(report_script):
-            # Find analysis CSV files
+            # Find responses CSV files (not analysis files)
             import glob
-            analysis_files = glob.glob(os.path.join(results_dir, f'*_analysis_*testrun_{job_id}*.csv'))
+            responses_files = glob.glob(os.path.join(results_dir, f'*_responses_testrun_{job_id}*.csv'))
 
-            print(f"Found {len(analysis_files)} analysis files for report generation")
+            print(f"Found {len(responses_files)} response files for report generation")
+            print(f"Looking in: {results_dir}")
+            print(f"Pattern: *_responses_testrun_{job_id}*.csv")
 
-            for analysis_file in analysis_files:
+            for responses_file in responses_files:
                 try:
-                    print(f"Generating report for: {analysis_file}")
+                    print(f"Generating report for: {responses_file}")
 
                     result = subprocess.run(
-                        ['python', report_script, '--analysis', analysis_file,
+                        ['python', report_script, '--analysis', responses_file,
                          '--config', config_path, '--test-run-id', job_id],
                         cwd=base_dir,
                         capture_output=True,
                         text=True,
-                        timeout=60
+                        timeout=120  # 2 minutes for GPT analysis + report generation
                     )
 
                     print(f"Report generation return code: {result.returncode}")
-                    print(f"Report stdout: {result.stdout[:500]}")
+                    print(f"Report stdout: {result.stdout[:1000]}")
                     if result.returncode != 0:
-                        print(f"Report stderr: {result.stderr[:500]}")
+                        print(f"Report stderr: {result.stderr[:1000]}")
 
                 except Exception as e:
                     print(f"Exception generating report: {e}")
