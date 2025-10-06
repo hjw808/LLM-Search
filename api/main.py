@@ -172,16 +172,19 @@ async def list_reports():
                     metadata = json.load(f)
 
                     # Transform to frontend format
+                    # Use test_run_id as the report ID so it matches the file names
+                    report_id = metadata.get('test_run_id', f"{business_name.replace(' ', '_')}_{metadata['timestamp']}")
+
                     report = {
-                        "id": f"{business_name.replace(' ', '_')}_{metadata['timestamp']}",
+                        "id": report_id,
                         "timestamp": metadata['timestamp'],
                         "business_name": business_name,
                         "providers": metadata.get('providers', []),
                         "total_queries": metadata.get('consumer_queries', 0) + metadata.get('business_queries', 0),
                         "visibility_score": 0,  # Mock value for now
                         "status": metadata.get('status', 'completed'),
-                        "has_analysis": False,  # Mock value for now
-                        "provider_reports": []  # Mock value for now
+                        "has_analysis": True,  # We now have analysis files
+                        "provider_reports": []  # Could populate from analysis files
                     }
                     reports.append(report)
             except Exception as e:
