@@ -288,6 +288,13 @@ async def run_test_background(
         for provider in providers:
             try:
                 script_path = os.path.join(scripts_dir, f'{provider}_script.py')
+                print(f"Running script: {script_path}")
+                print(f"Config path: {config_path}")
+
+                # Check if script exists
+                if not os.path.exists(script_path):
+                    print(f"Script not found: {script_path}")
+                    continue
 
                 # Run generate action
                 result = subprocess.run(
@@ -298,18 +305,25 @@ async def run_test_background(
                     timeout=60
                 )
 
+                print(f"Generate return code for {provider}: {result.returncode}")
+                print(f"Generate stdout: {result.stdout[:500]}")
+                print(f"Generate stderr: {result.stderr[:500]}")
+
                 if result.returncode == 0:
                     # Extract queries path from output
                     for line in result.stdout.split('\n'):
                         if 'Saved to:' in line or 'saved to:' in line:
                             queries_path = line.split('to:')[-1].strip().rstrip('.')
                             queries_paths[provider] = queries_path
+                            print(f"Found queries path for {provider}: {queries_path}")
                             break
                 else:
                     print(f"Error generating queries for {provider}: {result.stderr}")
 
             except Exception as e:
                 print(f"Exception generating queries for {provider}: {e}")
+                import traceback
+                traceback.print_exc()
 
         jobs_storage[job_id]["progress"] = 30
         jobs_storage[job_id]["message"] = f"Generated queries for {len(queries_paths)} provider(s). Collecting responses..."
