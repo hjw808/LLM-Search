@@ -178,16 +178,62 @@ async def list_reports():
                     # Use test_run_id as the report ID so it matches the file names
                     report_id = metadata.get('test_run_id', f"{business_name.replace(' ', '_')}_{metadata['timestamp']}")
 
+                    # Find and read analysis CSV to get real metrics
+                    analysis_pattern = os.path.join(results_dir, '**', f'*_analysis_testrun_{report_id}*.csv')
+                    analysis_files = glob.glob(analysis_pattern, recursive=True)
+
+                    visibility_score = 0
+                    business_mentions = 0
+                    competitors_found = 0
+                    provider_reports = []
+
+                    if analysis_files:
+                        try:
+                            df = pd.read_csv(analysis_files[0])
+
+                            # Calculate metrics from analysis CSV
+                            total_queries = len(df)
+                            if total_queries > 0:
+                                # Count business mentions (where Response_Text contains business name)
+                                business_mentions = df['Response_Text'].str.contains(business_name, case=False, na=False).sum()
+                                visibility_score = int((business_mentions / total_queries) * 100)
+
+                                # Count unique competitors mentioned
+                                if 'Competitors_Mentioned' in df.columns:
+                                    # Competitors_Mentioned contains comma-separated competitor names
+                                    all_competitors = set()
+                                    for comp_list in df['Competitors_Mentioned'].dropna():
+                                        if comp_list and str(comp_list).strip():
+                                            competitors = [c.strip() for c in str(comp_list).split(',')]
+                                            all_competitors.update(competitors)
+                                    competitors_found = len(all_competitors)
+
+                                # Extract provider from filename
+                                filename = os.path.basename(analysis_files[0])
+                                provider_match = filename.split('_')[0]  # e.g., "claude" from "claude_analysis_..."
+
+                                provider_reports = [{
+                                    "provider": provider_match,
+                                    "queries": total_queries,
+                                    "business_mentions": int(business_mentions),
+                                    "competitors_found": competitors_found,
+                                    "visibility_score": visibility_score
+                                }]
+                        except Exception as e:
+                            print(f"Error reading analysis CSV for {report_id}: {e}")
+
                     report = {
                         "id": report_id,
                         "timestamp": metadata['timestamp'],
                         "business_name": business_name,
                         "providers": metadata.get('providers', []),
                         "total_queries": metadata.get('consumer_queries', 0) + metadata.get('business_queries', 0),
-                        "visibility_score": 0,  # Mock value for now
+                        "visibility_score": visibility_score,
                         "status": metadata.get('status', 'completed'),
-                        "has_analysis": True,  # We now have analysis files
-                        "provider_reports": []  # Could populate from analysis files
+                        "has_analysis": True,
+                        "business_mentions": business_mentions,
+                        "competitors_found": competitors_found,
+                        "provider_reports": provider_reports
                     }
                     reports.append(report)
             except Exception as e:
