@@ -271,12 +271,20 @@ async def run_test_background(
         jobs_storage[job_id]["status"] = "completed"
         jobs_storage[job_id]["progress"] = 100
         jobs_storage[job_id]["message"] = "Test run completed successfully"
-        jobs_storage[job_id]["results"] = {
-            "test_run_id": job_id,
-            "providers": providers,
-            "total_queries": consumer_queries + business_queries,
-            "report_url": f"/api/reports/{job_id}"
-        }
+
+        # Format results as array of provider results for frontend compatibility
+        provider_results = [
+            {
+                "provider": provider,
+                "success": True,
+                "totalQueries": consumer_queries + business_queries,
+            }
+            for provider in providers
+        ]
+
+        jobs_storage[job_id]["results"] = provider_results
+        jobs_storage[job_id]["test_run_id"] = job_id
+        jobs_storage[job_id]["report_url"] = f"/api/reports/{job_id}"
 
     except Exception as e:
         jobs_storage[job_id]["status"] = "failed"
