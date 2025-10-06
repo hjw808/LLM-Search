@@ -4,6 +4,7 @@ Wraps existing Python scripts and provides REST API endpoints
 """
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
@@ -11,6 +12,8 @@ import sys
 import uuid
 from datetime import datetime
 import json
+import pandas as pd
+import glob
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -200,13 +203,10 @@ async def list_reports():
 @app.get("/api/reports/{report_id}/html")
 async def get_report_html(report_id: str):
     """Get HTML report for a specific report ID"""
-    from fastapi.responses import FileResponse
-
     # Find the HTML report file
     results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
 
     # Search for HTML file with this report ID
-    import glob
     html_pattern = os.path.join(results_dir, '**', f'*_report_testrun_{report_id}*.html')
     html_files = glob.glob(html_pattern, recursive=True)
 
@@ -227,7 +227,6 @@ async def get_report_responses(report_id: str, provider: Optional[str] = None):
     results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
 
     # Find analysis CSV (has competitor data)
-    import glob
     analysis_pattern = os.path.join(results_dir, '**', f'*_analysis_testrun_{report_id}*.csv')
     analysis_files = glob.glob(analysis_pattern, recursive=True)
 
@@ -240,7 +239,6 @@ async def get_report_responses(report_id: str, provider: Optional[str] = None):
         raise HTTPException(status_code=404, detail="Response data not found")
 
     # Read CSV and return as JSON
-    import pandas as pd
     try:
         df = pd.read_csv(analysis_files[0])
 
@@ -261,7 +259,6 @@ async def delete_report(report_id: str):
     results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
 
     deleted_files = []
-    import glob
 
     # Find all files with this test run ID
     patterns = [
@@ -284,12 +281,9 @@ async def delete_report(report_id: str):
 @app.get("/api/reports/{report_id}/download-responses")
 async def download_report_responses(report_id: str, format: str = "csv"):
     """Download responses as CSV or JSON"""
-    from fastapi.responses import FileResponse
-
     results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
 
     # Find analysis CSV
-    import glob
     analysis_pattern = os.path.join(results_dir, '**', f'*_analysis_testrun_{report_id}*.csv')
     csv_files = glob.glob(analysis_pattern, recursive=True)
 
@@ -300,7 +294,6 @@ async def download_report_responses(report_id: str, format: str = "csv"):
         return FileResponse(csv_files[0], media_type='text/csv',
                           filename=f'responses_{report_id}.csv')
     else:  # json
-        import pandas as pd
         df = pd.read_csv(csv_files[0])
         return df.to_dict('records')
 
